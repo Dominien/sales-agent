@@ -1,0 +1,44 @@
+{
+  "name": "sales-agent",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "One sales agent. Your CRM (or none). Your channels. A harness-agnostic autonomous sales agent with pluggable CRM + channel adapters. Runs on any MCP-capable harness.",
+  "scripts": {
+    "init": "tsx src/init.ts",
+    "tracker": "tsx src/tracker.ts",
+    "scoring": "tsx src/scoring.ts",
+    "performance": "tsx src/performance.ts",
+    "learnings": "tsx src/learnings.ts",
+    "rate": "tsx src/rate-limiter.ts",
+    "config": "tsx src/config.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.8.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^20.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": { "node": ">=18" },
+  "license": "MIT",
+  "keywords": [
+    "sales-automation",
+    "ai-agent",
+    "mcp",
+    "crm",
+    "hubspot",
+    "close",
+    "attio",
+    "salesforce",
+    "gmail",
+    "linkedin",
+    "sqlite",
+    "cold-outreach",
+    "follow-up",
+    "inbox-classifier"
+  ]
+}

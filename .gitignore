@@ -1,0 +1,13 @@
+node_modules/
+.env
+agent.config.json
+tracker.db
+tracker.db-wal
+tracker.db-shm
+output/drafts/
+output/prospect-dossiers/
+output/analysis/
+output/performance/
+output/research/
+.DS_Store
+*.log

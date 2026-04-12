@@ -1,0 +1,29 @@
+{
+  "$schema": "./agent.config.schema.json",
+  "crm": "sqlite",
+  "channels": ["email"],
+  "sender": {
+    "name": "Your Name",
+    "email": "you@example.com",
+    "linkedin_url": "https://www.linkedin.com/in/your-slug",
+    "company": "Your Company",
+    "scheduling_link": "https://cal.com/your-slug/30min",
+    "offering": "1-2 sentence description of what you sell and who it's for."
+  },
+  "rate_limits": {
+    "email_draft":      { "daily": 200 },
+    "linkedin_connect": { "daily": 20, "weekly": 80 },
+    "linkedin_message": { "daily": 40 }
+  },
+  "defaults": {
+    "language": "auto",
+    "channel_priority": ["linkedin", "email"],
+    "tier_filter_default": ["A", "B"]
+  },
+  "crm_options": {
+    "hubspot":    { "owner_email": "" },
+    "close":      { "organization_id": "" },
+    "attio":      { "workspace_id": "" },
+    "salesforce": { "org_alias": "default" }
+  }
+}
