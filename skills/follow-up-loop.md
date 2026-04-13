@@ -31,12 +31,12 @@ For each contact:
    a. Pick channel (rules above).
    b. Read context:
       - Email: `mcp__gmail__gmail_list_drafts` + last thread via `gmail_read_thread` if recoverable.
-      - LinkedIn: `mcp__linkedin__get_conversation`.
+      - LinkedIn: `npx tsx src/linkedin/cli.ts get-conversation --linkedin-username <user>` (or `--thread-id <id>`).
    c. Compose follow-up per `CLAUDE.md` → Message Rules.
    d. `rate-limiter.ts check <action>`. Exit on fail.
    e. Send:
       - Email: `mcp__gmail__gmail_create_draft` (DRAFT — user reviews and sends).
-      - LinkedIn: `mcp__linkedin__send_message` (autonomous).
+      - LinkedIn: `npx tsx src/linkedin/cli.ts send-message --linkedin-username <user> --message "<text>" --confirm-send true` (autonomous).
    f. Record rate-limit counter + update tracker (`last_message_at`, `notes_summary=FU: ...`, `status=sent`).
    g. Sleep 30–120 s.
 3. Continue until exhausted or stop condition.

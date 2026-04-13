@@ -23,7 +23,7 @@ The skill MUST substitute these at compose time. Never hard-code.
 
 ## Tool paths
 
-**Path A — MCP (primary).** Actual MCP tool names depend on how your harness
+**CRM + Email — MCP (when used).** Tool names depend on how your harness
 registered each server. Generic prefix convention used in skill files:
 
 - `mcp__hubspot__*` (if `crm = hubspot`)
@@ -31,12 +31,17 @@ registered each server. Generic prefix convention used in skill files:
 - `mcp__attio__*`
 - `mcp__salesforce__*`
 - `mcp__gmail__*` (if `channels` includes `email`)
-- `mcp__linkedin__*` (if `channels` includes `linkedin`)
 
 If your harness uses different prefixes, substitute. Function names after the
 prefix stay the same.
 
-**Path B — Local CLIs (always available):**
+**LinkedIn — in-repo CLI (no MCP server).** All LinkedIn ops shell out to:
+- `npx tsx src/linkedin/cli.ts <command> [--flag value ...]`
+- Commands: `login`, `check`, `daemon`, `get-inbox`, `get-conversation`, `get-person-profile`, `connect`, `send-message`, `search-people`, `search-jobs`, `get-company-profile`, `get-company-posts`, `get-job-details`
+- Returns one JSON object on stdout. Exit 2 = `auth_required` (skill must stop and surface). Exit 1 = error (includes `rate_limited`).
+- See `src/linkedin/README.md` for details and examples.
+
+**Local CLIs (always available):**
 
 - `npx tsx src/tracker.ts` — contact + reply + status
 - `npx tsx src/scoring.ts` — fit × engagement → tier
@@ -45,7 +50,7 @@ prefix stay the same.
 - `npx tsx src/learnings.ts append|read` — feedback log
 - `npx tsx src/config.ts` — print resolved config
 
-**Path B also for `crm=sqlite`:** tracker + notes + tasks + deals all local.
+**Local CLIs also for `crm=sqlite`:** tracker + notes + tasks + deals all local.
 
 ---
 
@@ -59,8 +64,14 @@ Before every `send_message`, `connect_with_person`, or `gmail_create_draft`:
 4. Jittered sleep 30–120 s before the next action.
 5. 3 consecutive errors from `connect_with_person` → hard-stop, append observation, exit.
 
-If the LinkedIn MCP returns an auth error: stop, notify user, wait for them to
-re-run `uvx linkedin-scraper-mcp@latest --login`.
+If a LinkedIn CLI command exits with code 2 (`{"status":"auth_required"}`):
+the daemon will already have auto-popped a login window. Stop the loop,
+notify the user to sign in there, and wait. Once they're done, the next
+command auto-respawns the daemon with the new session.
+
+If a command returns `{"status":"error","error":"rate_limited"}`: stop the
+loop, append a heartbeat, exit. LinkedIn typically clears 429 within 15-30
+minutes of zero traffic.
 
 ---
 

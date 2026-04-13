@@ -51,26 +51,38 @@ preferred Gmail MCP) per the harness's docs.
 
 ### LinkedIn channel (`channels` includes `linkedin`)
 
-Uses [stickerdaniel/linkedin-mcp-server](https://github.com/stickerdaniel/linkedin-mcp-server).
+In-repo TypeScript scraper at `src/linkedin/`. No external MCP, no `claude mcp add`.
 
 ```bash
-# 1. uv (runs the MCP server via uvx)
-brew install uv
+# 1. Install Chromium (one-time)
+npx playwright install chromium
 
-# 2. One-time browser login — stores ~/.linkedin-mcp/profile/
-#    IMPORTANT: set your LinkedIn display language to English BEFORE logging in.
-#    The scraper parses English labels — other languages will break profile parsing.
-uvx linkedin-scraper-mcp@latest --login
+# 2. Set your LinkedIn display language to English BEFORE logging in.
+#    Settings → Account preferences → Display language → English.
+#    The scraper parses English labels.
 
-# 3. Register with your harness (Claude Code shown)
-claude mcp add linkedin --scope user --env UV_HTTP_TIMEOUT=300 \
-  -- uvx linkedin-scraper-mcp@latest
+# 3. One-time browser login — pops a headful Chromium for you to sign in
+npx tsx src/linkedin/cli.ts login
+
+# 4. Verify
+npx tsx src/linkedin/cli.ts check
+# → {"status":"authed"}
 ```
 
-If the login requires 2FA or CAPTCHA, solve in the browser window that opens.
+If the login requires 2FA or CAPTCHA, solve it in the browser window that
+opens; the CLI polls for success up to 5 minutes.
 
-**Important:** LinkedIn scraping may conflict with LinkedIn's Terms of Service.
-The upstream MCP is marked for personal use only. You assume the risk.
+After this, every skill that touches LinkedIn shells out to
+`npx tsx src/linkedin/cli.ts <cmd>`. The first command per session spawns a
+warm-browser daemon (~30s); subsequent commands hit the daemon over a Unix
+socket and return in <1s. Daemon idles out after 10 min and respawns on
+demand. If your session expires, the next command auto-pops the login window.
+
+See [`src/linkedin/README.md`](../src/linkedin/README.md) for the full command
+list and JSON return shapes.
+
+**Important:** LinkedIn automated browsing may conflict with LinkedIn's Terms
+of Service. Personal use only. You assume the risk.
 
 ---
 
@@ -184,7 +196,17 @@ the Settings UI.
 
 **`better-sqlite3` install fails on macOS** — `xcode-select --install`.
 
-**LinkedIn MCP won't start** — run `UV_HTTP_TIMEOUT=300 uvx linkedin-scraper-mcp@latest --log-level DEBUG`
+**LinkedIn CLI returns `rate_limited`** — LinkedIn served HTTP 429. Wait
+15-30 minutes of zero traffic. Tight test loops without the 30-120s jittered
+sleep are the usual cause.
+
+**LinkedIn CLI exits 2 with `auth_required`** — session expired. The daemon
+auto-pops a login window; sign in there, then retry your last command.
+
+**Chromium binary missing** — `npx playwright install chromium`.
+
+**Daemon stuck** — `npx tsx src/linkedin/cli.ts daemon stop`. Next call
+respawns it.
 in the terminal to see the concrete error.
 
 **"agent.config.json not found"** — you haven't run `npx tsx src/init.ts` yet.

@@ -25,9 +25,8 @@ tool names are the de-facto standard.
 
 ### LinkedIn
 
-**File:** `src/channels/linkedin.ts`
-**MCP prefix:** `mcp__linkedin__*`
-**Server:** [`stickerdaniel/linkedin-mcp-server`](https://github.com/stickerdaniel/linkedin-mcp-server)
+**Adapter:** `src/channels/linkedin.ts` (CLI mapping; no MCP)
+**Implementation:** in-repo TypeScript at `src/linkedin/cli.ts` — see [`src/linkedin/README.md`](../src/linkedin/README.md).
 **Outbound semantics:** **autonomous with strict rate-limits.** The skill
 loops through targets, enforces rate-limiter check + record, sleeps with
 jitter.
@@ -36,17 +35,22 @@ jitter.
 
 **Setup:**
 ```bash
-brew install uv
-uvx linkedin-scraper-mcp@latest --login
-claude mcp add linkedin --scope user --env UV_HTTP_TIMEOUT=300 \
-  -- uvx linkedin-scraper-mcp@latest
+npm install
+npx playwright install chromium
+npx tsx src/linkedin/cli.ts login        # one-time interactive
+npx tsx src/linkedin/cli.ts check        # verify session
 ```
 
-Browser profile stored at `~/.linkedin-mcp/profile/`. Session expires after
-~2-4 weeks — re-run `--login` when it does.
+> Set your LinkedIn UI language to **English** before logging in — the scraper
+> parses English labels.
 
-**ToS note:** LinkedIn scraping is a grey area. The MCP's README states
-personal use only. You assume the risk.
+A long-lived daemon process holds one warm Chromium across calls (~30s cold
+spawn, then <1s per command). Cookies live in `~/.linkedin-mcp/cookies.json`,
+profile in `~/.linkedin-mcp/profile-ts/`. Session typically lives ~2-4 weeks;
+when it expires the next command auto-pops a login window.
+
+**ToS note:** LinkedIn automated browsing is a grey area. Personal use only.
+You assume the risk.
 
 ---
 

@@ -36,7 +36,7 @@ tracker.ts find <identifier>
 If exists AND `status in {sent, skipped}` AND no NEGATIVE_HARD → skip.
 
 ### 2. Research
-- **LinkedIn channel:** `mcp__linkedin__get_person_profile` with sections `[experience, posts, honors, certifications]`.
+- **LinkedIn channel:** `npx tsx src/linkedin/cli.ts get-person-profile --linkedin-username <user> --sections experience,posts,honors,certifications`.
 - **Email channel:** if the contact is in the CRM, call `crm.getContact(id)`. Optionally `WebFetch` on their company domain for context.
 
 Extract exactly ONE personalization hook per `knowledge/research-config.md`
@@ -65,7 +65,7 @@ Exit ≠ 0 → stop the whole loop, heartbeat, exit.
 ### 7. Send (or preview)
 - **Preview mode:** write draft text to `output/drafts/cold-<date>-<slug>.md`, continue.
 - **Live — email:** `mcp__gmail__gmail_create_draft(...)` → record `email_last_draft_id`.
-- **Live — linkedin:** `mcp__linkedin__connect_with_person({url, note})` (uses `linkedin_connect` rate key).
+- **Live — linkedin:** `npx tsx src/linkedin/cli.ts connect --linkedin-username <user> --note "<≤300 chars>"` (uses `linkedin_connect` rate key). Exit 2 → stop loop, surface auth error.
 
 ### 8. Record
 ```

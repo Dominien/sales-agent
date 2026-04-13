@@ -36,15 +36,15 @@ For each enabled channel:
    h. If CRM is external and `POSITIVE_*`: update CRM lead status via `crm.setLeadStatus`.
 
 ### LinkedIn
-1. `mcp__linkedin__get_inbox`.
+1. `npx tsx src/linkedin/cli.ts get-inbox --limit 20`. Use the `references` map to harvest `threadId` values.
 2. For each new conversation (same de-dup logic):
-   a. `mcp__linkedin__get_conversation({id: threadId})`.
+   a. `npx tsx src/linkedin/cli.ts get-conversation --thread-id <threadId>`.
    b. Classify.
    c. Identify sender → resolve or create tracker row.
    d. For `POSITIVE_*` and `auto_reply=true`:
       - `rate-limiter.ts check linkedin_message`. On fail: skip auto-reply (still classify + log).
       - Compose reply per `CLAUDE.md`.
-      - `mcp__linkedin__send_message({url, body})`.
+      - `npx tsx src/linkedin/cli.ts send-message --linkedin-username <user> --message "<text>" --confirm-send true`.
       - `rate-limiter.ts record linkedin_message`.
    e. `tracker.ts reply <contact_id> linkedin <classification> <snippet>`.
 

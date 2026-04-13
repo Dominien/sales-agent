@@ -25,8 +25,8 @@ For each target:
    - bare domain → company
 
 2. **Collect data** (use whichever channels are enabled):
-   - **Person:** `mcp__linkedin__get_person_profile` (all sections)
-   - **Company:** `mcp__linkedin__get_company_profile` + `get_company_posts`
+   - **Person:** `npx tsx src/linkedin/cli.ts get-person-profile --linkedin-username <user> --sections experience,education,posts,certifications,honors`
+   - **Company:** `npx tsx src/linkedin/cli.ts get-company-profile --company-name <slug> --sections about,posts,jobs` plus `get-company-posts --company-name <slug>`
    - **Fallback / enrichment:** `WebFetch` on the company domain for messaging, products, team page
    - **If CRM is external:** `crm.searchContacts({email})` + `crm.listNotes(id)` to pull existing internal context
 

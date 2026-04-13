@@ -46,10 +46,10 @@ One-page mental model of sales-agent.
 2. For each target:
    a. `tracker.ts find <linkedin_url>` — dedup.
    b. `rate-limiter.ts check linkedin_connect` — capacity.
-   c. `mcp__linkedin__get_person_profile` — research.
+   c. `npx tsx src/linkedin/cli.ts get-person-profile --linkedin-username <user>` — research.
    d. `scoring.ts score <contact_id> --data ...` — tier.
    e. Draft the 300-char note.
-   f. `mcp__linkedin__connect_with_person` — action.
+   f. `npx tsx src/linkedin/cli.ts connect --linkedin-username <user> --note "..."` — action.
    g. `rate-limiter.ts record linkedin_connect` — counter.
    h. `tracker.ts upsert --json ...` — log.
    i. For external CRM: `mcp__<crm>__*` upsert + note-add.

@@ -11,11 +11,16 @@
     "learnings": "tsx src/learnings.ts",
     "rate": "tsx src/rate-limiter.ts",
     "config": "tsx src/config.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "linkedin": "tsx src/linkedin/cli.ts",
+    "linkedin:login": "tsx src/linkedin/cli.ts login",
+    "linkedin:check": "tsx src/linkedin/cli.ts check"
   },
   "dependencies": {
     "better-sqlite3": "^12.8.0",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "playwright": "1.52.0",
+    "rebrowser-playwright": "^1.49.0"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",

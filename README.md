@@ -78,25 +78,33 @@ into Gmail → you review and send.
 
 ## 5-minute quickstart (with LinkedIn)
 
-Add LinkedIn to the flow above:
+LinkedIn ships in-repo as a TypeScript scraper. No external MCP server, no
+`claude mcp add`, no `uvx`. Just two extra commands on top of the email setup:
 
 ```bash
-# One-time LinkedIn auth (opens a browser window)
-# IMPORTANT: set your LinkedIn display language to English BEFORE logging in.
-# The scraper parses English labels — other languages will break profile parsing.
-brew install uv
-uvx linkedin-scraper-mcp@latest --login
+# 1. Install Chromium (one-time)
+npx playwright install chromium
 
-# Register the MCP with your harness (Claude Code shown)
-claude mcp add linkedin --scope user --env UV_HTTP_TIMEOUT=300 \
-  -- uvx linkedin-scraper-mcp@latest
+# 2. Set your LinkedIn display language to English BEFORE logging in.
+#    Settings → Account preferences → Display language → English.
 
-# Re-run the wizard to add linkedin to channels
+# 3. One-time interactive browser login
+npx tsx src/linkedin/cli.ts login        # pops a Chromium window; sign in
+npx tsx src/linkedin/cli.ts check        # → {"status":"authed"}
+
+# 4. Re-run the wizard to add linkedin to channels
 npx tsx src/init.ts
 ```
 
-See [`docs/setup.md`](docs/setup.md) for the full cross-CRM / cross-channel
-walkthrough.
+After that, every skill that touches LinkedIn shells out to
+`npx tsx src/linkedin/cli.ts <cmd>`. The first call spawns a long-lived
+warm-browser daemon (~30s); subsequent calls reuse it over a Unix socket and
+return in <1s. Daemon idles out after 10 min and respawns on demand. If your
+session expires, the next command auto-pops a fresh login window.
+
+See [`src/linkedin/README.md`](src/linkedin/README.md) for the full command
+reference, and [`docs/setup.md`](docs/setup.md) for the cross-CRM /
+cross-channel walkthrough.
 
 ---
 
@@ -277,9 +285,10 @@ overriding the skill's send step.
 **Can I switch CRMs later?** Yes. Change `agent.config.json` → `crm`. Existing
 tracker rows keep their `crm_source` so you can migrate gradually.
 
-**Is LinkedIn scraping allowed?** It's a grey area. The upstream MCP
-(`stickerdaniel/linkedin-mcp-server`) explicitly states personal use only and
-may conflict with LinkedIn's Terms. You assume the risk when you use it.
+**Is LinkedIn scraping allowed?** It's a grey area. Personal use only — the
+in-repo scraper drives a real browser as you, with cookies you logged in
+with, so it walks the same line your manual browser does. May still conflict
+with LinkedIn's Terms. You assume the risk when you use it.
 
 **What harnesses are supported?** Anything with MCP support. Tested on Claude
 Code. See [`AGENTS.md`](AGENTS.md) for the compatibility matrix.
@@ -320,8 +329,8 @@ MIT. See [`LICENSE`](LICENSE).
 ## Acknowledgements
 
 Built on top of:
-- [Model Context Protocol](https://modelcontextprotocol.io/) — the open standard that makes this pluggable.
-- [stickerdaniel/linkedin-mcp-server](https://github.com/stickerdaniel/linkedin-mcp-server) — LinkedIn channel.
+- [Model Context Protocol](https://modelcontextprotocol.io/) — the open standard that makes the CRM and email channels pluggable.
+- [Playwright](https://playwright.dev/) (via [rebrowser-playwright](https://github.com/rebrowser/rebrowser-playwright)) — drives the in-repo LinkedIn scraper.
 - First-party MCP servers from HubSpot, Close, Attio, Salesforce, and the Gmail MCP team.
 
 Inspired by two progenitor agents (`hubspot-email-agent`, `linkedin-sales-agent`)

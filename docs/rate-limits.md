@@ -64,16 +64,17 @@ npx tsx src/rate-limiter.ts prune
 
 ## What to do if LinkedIn flags you
 
-1. **Stop all outreach immediately.** No more MCP calls.
-2. **Log out the MCP session:**
+1. **Stop all outreach immediately.** No more LinkedIn CLI calls.
+2. **Stop the daemon and wipe the local session:**
    ```bash
-   uvx linkedin-scraper-mcp@latest --logout
+   npx tsx src/linkedin/cli.ts daemon stop
+   rm -rf ~/.linkedin-mcp/profile-ts ~/.linkedin-mcp/cookies.json ~/.linkedin-mcp/source-state-ts.json
    ```
 3. **Wait 24–48 h.** Do not touch the account programmatically.
 4. **Log in manually in a real browser.** Do some normal human activity —
    scroll your feed, react to 5 posts, comment once. This "cools down" the
    behavior score.
-5. **After 48 h:** re-run `uvx linkedin-scraper-mcp@latest --login`. **Halve your limits** (10 invites/day, 40/week, 20 messages/day) for one week. Watch the
+5. **After 48 h:** re-run `npx tsx src/linkedin/cli.ts login`. **Halve your limits** (10 invites/day, 40/week, 20 messages/day) for one week. Watch the
    `status` daily.
 6. **After the week:** if nothing re-flags, restore defaults. If flagged again,
    lower permanently.

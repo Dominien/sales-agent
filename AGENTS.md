@@ -21,16 +21,17 @@ If your harness is missing any of these, sales-agent won't work — fall back
 to whichever piece is needed (e.g., an agent without MCP could only run in
 `sqlite` mode with email disabled, which isn't useful).
 
-## MCP prefix mapping
+## MCP prefix mapping (CRM + email only)
 
-Skill files use a generic prefix (`mcp__linkedin__get_person_profile`). Your
-harness may register servers under a different prefix. Substitute as needed:
+LinkedIn no longer uses MCP — it ships as in-repo TypeScript at
+`src/linkedin/cli.ts` which the skills shell out to with `npx tsx`. CRM and
+email channels still use MCP. Skill files use a generic prefix; substitute if
+your harness registers servers under different names:
 
-| Generic (in skills) | Claude Code registered via `claude mcp add linkedin ...` |
+| Generic (in skills) | Claude Code's hosted equivalent |
 |---|---|
-| `mcp__linkedin__get_person_profile` | `mcp__linkedin__get_person_profile` |
-| `mcp__gmail__gmail_create_draft` | `mcp__claude_ai_Gmail__gmail_create_draft` (if using Claude's hosted Gmail) OR `mcp__gmail__gmail_create_draft` (if self-registered) |
-| `mcp__hubspot__search_crm_objects` | `mcp__claude_ai_HubSpot__search_crm_objects` OR harness-specific |
+| `mcp__gmail__gmail_create_draft` | `mcp__claude_ai_Gmail__gmail_create_draft` |
+| `mcp__hubspot__search_crm_objects` | `mcp__claude_ai_HubSpot__search_crm_objects` |
 
 Function names after the prefix are stable.
 
@@ -44,19 +45,16 @@ Function names after the prefix are stable.
 
 ## Setup checklist (Claude Code, full stack: HubSpot + email + linkedin)
 
-1. System:
+1. System: `brew install node`
+2. Repo: `npm install`, then `npx playwright install chromium`
+3. LinkedIn:
    ```bash
-   brew install node uv
+   npx tsx src/linkedin/cli.ts login        # one-time interactive login
+   npx tsx src/linkedin/cli.ts check        # verify session
    ```
-2. LinkedIn:
-   ```bash
-   uvx linkedin-scraper-mcp@latest --login   # one-time browser login
-   claude mcp add linkedin --scope user --env UV_HTTP_TIMEOUT=300 \
-     -- uvx linkedin-scraper-mcp@latest
-   ```
-3. HubSpot: connect via Claude Code's hosted OAuth (claude.ai HubSpot).
-4. Repo: `npm install`, `npx tsx src/init.ts` → pick `hubspot` + `email,linkedin`
-5. Invoke skills from prompts/invoke-skill.md.
+4. HubSpot: connect via Claude Code's hosted OAuth (claude.ai HubSpot).
+5. Wizard: `npx tsx src/init.ts` → pick `hubspot` + `email,linkedin`
+6. Invoke skills from prompts/invoke-skill.md.
 
 ## Optional Gmail fallback
 
