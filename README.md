@@ -82,6 +82,8 @@ Add LinkedIn to the flow above:
 
 ```bash
 # One-time LinkedIn auth (opens a browser window)
+# IMPORTANT: set your LinkedIn display language to English BEFORE logging in.
+# The scraper parses English labels — other languages will break profile parsing.
 brew install uv
 uvx linkedin-scraper-mcp@latest --login
 

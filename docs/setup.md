@@ -58,6 +58,8 @@ Uses [stickerdaniel/linkedin-mcp-server](https://github.com/stickerdaniel/linked
 brew install uv
 
 # 2. One-time browser login — stores ~/.linkedin-mcp/profile/
+#    IMPORTANT: set your LinkedIn display language to English BEFORE logging in.
+#    The scraper parses English labels — other languages will break profile parsing.
 uvx linkedin-scraper-mcp@latest --login
 
 # 3. Register with your harness (Claude Code shown)
