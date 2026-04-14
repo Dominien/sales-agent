@@ -29,8 +29,9 @@ async function init(): Promise<void> {
       // ignore
     }
   }
-  log('opening browser context...');
-  context = await openContext({ headless: true });
+  const headful = process.env.LINKEDIN_HEADFUL === '1';
+  log(`opening browser context (${headful ? 'HEADFUL' : 'headless'})...`);
+  context = await openContext({ headless: !headful, slowMo: headful ? 150 : 0 });
   const page = context.pages()[0] ?? (await context.newPage());
   await warmup(page);
   log('navigating to /feed/ to establish session...');
