@@ -17,21 +17,34 @@ npm install
 
 ---
 
-## Step 1 — Run the wizard
+## Step 1 — Run the setup
+
+Two options — pick one.
+
+**Option A (preferred, if you use Claude Code)** — conversational setup in chat:
+
+```
+/setup
+```
+
+Claude asks for each field in plain English and writes
+`agent.config.json` + `.env` for you. Re-run `/setup` anytime to edit
+specific fields without redoing everything.
+
+**Option B (any shell)** — readline wizard, same output:
 
 ```bash
 npx tsx src/init.ts
 ```
 
-The wizard asks:
+Either flow collects the same inputs:
 
 1. **CRM** — `sqlite` | `hubspot` | `close` | `attio` | `salesforce`
 2. **Channels** — comma-separated subset of `email,linkedin`
 3. **Sender identity** — name, email, LinkedIn URL, company, offering, scheduling link
 4. **Rate limits** — accept defaults unless you have a specific reason
 
-It writes `agent.config.json` + `.env` skeleton. Re-run anytime to change
-choices.
+Output is `agent.config.json` + `.env` skeleton.
 
 ---
 
@@ -209,4 +222,4 @@ auto-pops a login window; sign in there, then retry your last command.
 respawns it.
 in the terminal to see the concrete error.
 
-**"agent.config.json not found"** — you haven't run `npx tsx src/init.ts` yet.
+**"agent.config.json not found"** — you haven't run setup yet. In Claude Code: `/setup`. Otherwise: `npx tsx src/init.ts`.

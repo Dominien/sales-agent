@@ -138,9 +138,9 @@ async function main() {
   console.log(`\n── Next steps ──`);
   if (channels.includes('linkedin')) {
     console.log(`  1. LinkedIn auth (one-time):`);
-    console.log(`       brew install uv`);
-    console.log(`       uvx linkedin-scraper-mcp@latest --login`);
-    console.log(`       claude mcp add linkedin --scope user --env UV_HTTP_TIMEOUT=300 -- uvx linkedin-scraper-mcp@latest`);
+    console.log(`       npx playwright install chromium`);
+    console.log(`       npx tsx src/linkedin/cli.ts login   # headful; solve 2FA/CAPTCHA`);
+    console.log(`       npx tsx src/linkedin/cli.ts check   # verify → {"status":"authed"}`);
   }
   if (crm === 'hubspot') {
     console.log(`  • HubSpot: connect via your harness's OAuth (Claude Code: claude.ai HubSpot).`);
