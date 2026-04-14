@@ -117,6 +117,21 @@ minutes of zero traffic.
 - **Language matches profile.**
 - **Skip** if no hook exists. Move on.
 
+### Note-quota fallback (free-tier LinkedIn)
+
+LinkedIn free tier caps personalized invites at ~5/month. Once exhausted,
+the "Add a note" UI disappears and the CLI may return a bare-send result
+(`status: "connected"` with `note_sent: false`). Skills MUST:
+
+1. Treat `status: "connected"` with `note_sent: false` as a successful
+   send — count it against `linkedin_connect`, do not retry.
+2. Store the drafted hook in `tracker.linkedin_connection_note` anyway,
+   and deliver it as the FIRST `send_message` once the invite is accepted.
+3. Do NOT abort the batch on `note_not_supported`. Continue the loop.
+
+Only `status: "send_failed"` (or `auth_required` / `rate_limited`) count
+against the 3-consecutive-error hard-stop.
+
 ### Good example (278 chars)
 
 ```

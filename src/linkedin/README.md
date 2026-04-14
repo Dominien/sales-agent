@@ -119,7 +119,7 @@ No long-running MCP server. No mutex (each call is its own process). Skills seri
 When LinkedIn changes the UI:
 
 - All selectors live in `browser/selectors.ts` and inline at top of each `scrape/*.ts` file
-- Run any command with the browser headed via setting `headless: false` in `browser/launch.ts` to debug
+- Run the daemon headfully to watch the flow: `LINKEDIN_HEADFUL=1 npx tsx src/linkedin/cli.ts daemon --foreground` (slowMo 150, visible Chromium). Default stays headless.
 - `npx tsx src/linkedin/cli.ts check` is the smallest reproducer
 
 ## Rate limiting
