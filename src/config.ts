@@ -24,11 +24,14 @@ export interface Sender {
   company: string;
   scheduling_link: string;
   offering: string;
+  /** IANA timezone string (e.g. "Europe/Berlin"). Empty → skills avoid suggesting specific times. */
+  timezone: string;
 }
 
 export interface RateLimitSpec {
-  daily: number;
+  daily?: number;
   weekly?: number;
+  monthly?: number;
 }
 
 export interface Config {
@@ -39,6 +42,12 @@ export interface Config {
     email_draft: RateLimitSpec;
     linkedin_connect: RateLimitSpec;
     linkedin_message: RateLimitSpec;
+    /**
+     * Monthly cap for personalized LinkedIn invite notes. Free tier is
+     * typically ~5/month. When exhausted, skills stop passing notes to
+     * `connect` (note stays in tracker for post-accept DM delivery).
+     */
+    linkedin_connect_note: RateLimitSpec;
   };
   defaults: {
     language: 'auto' | 'en' | 'de';
@@ -63,11 +72,13 @@ const DEFAULT_CONFIG: Config = {
     company: '',
     scheduling_link: '',
     offering: '',
+    timezone: '',
   },
   rate_limits: {
     email_draft: { daily: 200 },
     linkedin_connect: { daily: 20, weekly: 80 },
     linkedin_message: { daily: 40 },
+    linkedin_connect_note: { monthly: 5 },
   },
   defaults: {
     language: 'auto',

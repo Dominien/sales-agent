@@ -25,7 +25,8 @@ choice (Claude Code, Cursor, Continue, Windsurf, custom).
   every new rule.
 - **Safety rails everywhere.** Per-channel rate limiter enforced before every
   send. Never-invent-details rule. Email is draft-only. LinkedIn caps stay
-  below flagging thresholds.
+  below flagging thresholds. Silent rejects + transient click races are
+  detected and auto-handled without halting batches.
 
 ---
 
@@ -48,7 +49,7 @@ choice (Claude Code, Cursor, Continue, Windsurf, custom).
 | Channel | Status | Outbound | Rate limit |
 |---|---|---|---|
 | **Email (Gmail)** | Shipped v1 | Draft only (user sends) | 200 drafts/day (soft cap) |
-| **LinkedIn** | Shipped v1 | Autonomous with guardrails | 20 invites/day, 80/week, 40 msgs/day |
+| **LinkedIn** | Shipped v1 | Autonomous with guardrails | 20 invites/day, 80/week, 40 msgs/day, 5 personalized-notes/month |
 | **Bring your own** | always | ~150 LOC | Implement `Channel` — see `src/channels/README.md` |
 
 ---
@@ -229,13 +230,31 @@ The external CRM owns the canonical contact record. The local tracker is the
 
 - **Email is draft-only.** The agent creates Gmail drafts; you send them after
   review. Never auto-sent.
-- **LinkedIn has hard caps.** 20 invites/day, 80/week, 40 messages/day — all
-  below LinkedIn's flagging thresholds. Per-skill enforcement via
+- **LinkedIn has hard caps.** 20 invites/day, 80/week, 40 messages/day, plus
+  a monthly personalized-note budget (default 5/mo, LinkedIn free-tier) —
+  all below LinkedIn's flagging thresholds. Per-skill enforcement via
   [`src/rate-limiter.ts`](src/rate-limiter.ts).
 - **Never-invent-details rule.** Skills will skip a contact rather than
   fabricate a personalization detail.
-- **3-error hard-stop.** If LinkedIn rejects 3 consecutive `connect_with_person`
-  calls, the skill exits and logs an observation — no silent retries.
+- **Silent-reject distinct from real errors.** When LinkedIn closes the
+  invite dialog without transitioning to Pending (upsell / throttle), the
+  contact is skipped without consuming rate budget or counting toward the
+  3-consecutive-error hard-stop.
+- **One-shot auto-retry on transient click races** in `connect`; only
+  genuine `send_failed` errors advance the consecutive-error counter.
+- **3-error hard-stop.** After 3 consecutive `send_failed` errors, the
+  skill exits and logs an observation — no silent retries past that.
+- **Note-quota auto-fallback.** When the monthly personalized-note budget
+  is exhausted (detected from a silent note-drop), skills continue with
+  bare invites and queue the drafted note for post-accept DM delivery.
+  No mid-batch prompt.
+- **Match validation before LinkedIn sends.** Search results are scored on
+  surname uniqueness + company + location overlap; ambiguous top hits are
+  stashed in `output/research/ambiguous/` instead of shipped.
+- **`do_not_contact` is honored everywhere.** Once set (by
+  `inbox-classifier` on `BOUNCE`/`NEGATIVE_HARD`, or manually via
+  `tracker.ts skip`), no outreach skill will touch the contact on any
+  channel.
 - **Section C is human-only.** `performance-review` proposes rule blocks; it
   never edits `learnings.md` Section C itself.
 
@@ -312,8 +331,14 @@ sales-agent/
 ├── docs/                      # setup, architecture, channels, crm-adapters, rate-limits, migration
 ├── src/
 │   ├── db.ts tracker.ts config.ts rate-limiter.ts scoring.ts performance.ts learnings.ts init.ts
+│   ├── skip-flags.ts          # hard / warm / personal skip-tier classifier
+│   ├── cohort-builder.ts      # typed outreach-queue builder + CLI
+│   ├── honorifics.ts          # strips Dr./Prof. Dr./Dipl.-Ing. from firstname
 │   ├── adapters/              # CRM adapters (sqlite, hubspot, close, attio, salesforce)
-│   └── channels/              # Channel adapters (gmail, linkedin)
+│   ├── channels/              # Channel adapters (gmail, linkedin)
+│   └── linkedin/
+│       ├── match-validator.ts # post-search candidate confidence scorer
+│       └── scrape/ …          # Playwright scrapers (connect, search, inbox, …)
 ├── skills/                    # 10 skill markdown files
 ├── knowledge/                 # learnings.md, scoring-config.md, research-config.md, crm-field-mapping.md
 ├── prompts/invoke-skill.md    # ready-to-paste skill invocations

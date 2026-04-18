@@ -41,8 +41,14 @@ Either flow collects the same inputs:
 
 1. **CRM** — `sqlite` | `hubspot` | `close` | `attio` | `salesforce`
 2. **Channels** — comma-separated subset of `email,linkedin`
-3. **Sender identity** — name, email, LinkedIn URL, company, offering, scheduling link
-4. **Rate limits** — accept defaults unless you have a specific reason
+3. **Sender identity** — name, email, LinkedIn URL, company, scheduling link,
+   timezone (IANA, e.g. `Europe/Berlin`; drives meeting-slot wording in
+   `POSITIVE_MEETING` replies), offering
+4. **Rate limits** — accept defaults unless you have a specific reason.
+   The wizard covers the four budgets: `email_draft` (daily),
+   `linkedin_connect` (daily + weekly), `linkedin_message` (daily), and
+   `linkedin_connect_note` (monthly — LinkedIn free-tier personalized-note
+   quota, default 5/month; see [`docs/rate-limits.md`](rate-limits.md)).
 
 Output is `agent.config.json` + `.env` skeleton.
 

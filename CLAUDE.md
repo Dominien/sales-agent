@@ -16,6 +16,9 @@ Read the sender identity from `agent.config.json` → `sender`:
 - `name`, `email`, `linkedin_url`
 - `company`, `offering` — 1–2 sentence pitch
 - `scheduling_link` — used in POSITIVE_MEETING replies
+- `timezone` — IANA tz (e.g. `Europe/Berlin`) used when suggesting meeting
+  times in POSITIVE_MEETING replies. If empty, skills fall back to "let me
+  know what works for you" phrasing instead of proposing specific slots.
 
 The skill MUST substitute these at compose time. Never hard-code.
 
@@ -212,9 +215,19 @@ Kind regards,
 
 ### POSITIVE_MEETING auto-reply (LinkedIn)
 
+Use `<sender.timezone>` from config as the tz label. If `sender.timezone` is
+empty, drop the slot proposal and send the link-only variant.
+
 ```
-Happy to hear that, Marcus. I have Tuesday 10:00 and Thursday 15:00 CET
-open — which works better? If neither, here's my link:
+Happy to hear that, Marcus. I have Tuesday 10:00 and Thursday 15:00
+<sender.timezone> open — which works better? If neither, here's my link:
+<sender.scheduling_link>.
+```
+
+Link-only fallback (empty `sender.timezone`):
+
+```
+Happy to hear that, Marcus. Grab whatever works here:
 <sender.scheduling_link>.
 ```
 

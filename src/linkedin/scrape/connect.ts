@@ -321,7 +321,48 @@ async function openMoreMenu(page: Page): Promise<boolean> {
   return (await items.count()) > 0;
 }
 
+// Failure messages that indicate DOM timing / click races rather than a
+// terminal LinkedIn rejection. These are worth one auto-retry with a longer
+// settle pause. Terminal failures (note too long, wrong target, already
+// connected, silent-reject) are NOT retried.
+const TRANSIENT_FAILURE_PATTERNS: RegExp[] = [
+  /could not find or click button/i,
+  /could not find the send button/i,
+  /invite dialog did not close/i,
+];
+
+function isTransientFailure(r: ToolResult): boolean {
+  if (r.status !== 'send_failed') return false;
+  const msg = r.message ?? '';
+  return TRANSIENT_FAILURE_PATTERNS.some((p) => p.test(msg));
+}
+
 export async function performConnect(
+  page: Page,
+  username: string,
+  note: string | undefined,
+): Promise<ToolResult> {
+  const first = await performConnectOnce(page, username, note);
+  if (!isTransientFailure(first)) return first;
+
+  // One retry with a longer settle window. 3s sleep gives LinkedIn's UI time
+  // to reach a stable state after whatever click race tripped the first try.
+  process.stderr.write(
+    `[connect-retry] transient failure: "${first.message}" — retrying once after 3s\n`,
+  );
+  await page.waitForTimeout(3000).catch(() => {});
+  const retry = await performConnectOnce(page, username, note);
+  if (retry.status === 'send_failed' && !isTransientFailure(retry)) {
+    retry.retry_attempts = 2;
+    retry.retry_reason = `retry_non_transient: ${first.message ?? ''}`;
+    return retry;
+  }
+  retry.retry_attempts = 2;
+  retry.retry_reason = first.message;
+  return retry;
+}
+
+async function performConnectOnce(
   page: Page,
   username: string,
   note: string | undefined,
@@ -474,10 +515,15 @@ export async function performConnect(
       ok = redetected.state === 'pending' || redetected.state === 'already_connected';
     }
     if (!ok) {
+      // Silent-reject: LinkedIn closed the dialog but the account state did
+      // not transition to Pending. Common causes: upsell modal, account-level
+      // throttle, monthly invite cap. Distinct from send_failed so skills can
+      // skip this contact without counting against the 3-consecutive-error
+      // hard-stop and without consuming a rate-limit budget slot.
       return result(
         url,
-        'send_failed',
-        'Dialog closed but action area did not enter Pending — invite silently rejected by LinkedIn (possible upsell modal or account-level throttle).',
+        'silent_reject',
+        'Invite silently rejected by LinkedIn (dialog closed without Pending transition — possible upsell modal or account-level throttle).',
         noteSent,
       );
     }

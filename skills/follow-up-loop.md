@@ -9,6 +9,8 @@ Re-touch contacts who've gone silent. Queue:
 - **Email:** rows where `email_last_drafted_at` is older than N days AND no reply
 - **LinkedIn (1st-degree only):** rows where `linkedin_connection_status = CONNECTED` AND (`linkedin_last_message_at` empty OR older than N days) AND no reply
 
+**Always exclude** rows where `do_not_contact != ''` (bounce / unsubscribe / negative_hard / manual). These were flagged by `inbox-classifier` or the user and must never be re-touched.
+
 ## Inputs
 
 - `stale_days` (default 7)

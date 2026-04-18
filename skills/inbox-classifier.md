@@ -33,7 +33,8 @@ For each enabled channel:
    e. For `NEGATIVE_SOFT` / `NEUTRAL`: optionally draft a polite reply text into `notes_summary` with prefix `INBOX-DRAFT:`.
    f. For `NEGATIVE_HARD` / `BOUNCE`: no draft.
    g. `tracker.ts reply <contact_id> email <classification> <snippet>`
-   h. If CRM is external and `POSITIVE_*`: update CRM lead status via `crm.setLeadStatus`.
+   h. For `NEGATIVE_HARD`: also `tracker.ts skip <contact_id> negative_hard`. For `BOUNCE`: `tracker.ts skip <contact_id> bounce`. Both flag the contact as `do_not_contact` so `cold-outreach` and `follow-up-loop` skip them forever.
+   i. If CRM is external and `POSITIVE_*`: update CRM lead status via `crm.setLeadStatus`.
 
 ### LinkedIn
 1. `npx tsx src/linkedin/cli.ts get-inbox --limit 20`. Use the `references` map to harvest `threadId` values.
@@ -43,10 +44,11 @@ For each enabled channel:
    c. Identify sender → resolve or create tracker row.
    d. For `POSITIVE_*` and `auto_reply=true`:
       - `rate-limiter.ts check linkedin_message`. On fail: skip auto-reply (still classify + log).
-      - Compose reply per `CLAUDE.md`.
+      - Compose reply per `CLAUDE.md`. For `POSITIVE_MEETING`, inject `<sender.timezone>` from config when proposing slots; use the link-only fallback when `sender.timezone` is empty.
       - `npx tsx src/linkedin/cli.ts send-message --linkedin-username <user> --message "<text>" --confirm-send true`.
       - `rate-limiter.ts record linkedin_message`.
    e. `tracker.ts reply <contact_id> linkedin <classification> <snippet>`.
+   f. For `NEGATIVE_HARD`: also `tracker.ts skip <contact_id> negative_hard`. (LinkedIn has no BOUNCE equivalent.)
 
 ## End of run
 

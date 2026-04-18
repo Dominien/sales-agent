@@ -98,6 +98,7 @@ async function main() {
   const linkedin_url = await ask('Your LinkedIn URL', '');
   const company = await ask('Your company');
   const scheduling_link = await ask('Scheduling link (e.g. https://cal.com/...)', '');
+  const timezone = await ask('Your timezone (IANA, e.g. Europe/Berlin or America/New_York)', 'UTC');
   const offering = await ask('1–2 sentence description of what you sell and who for');
 
   // 4. Rate limits
@@ -111,7 +112,7 @@ async function main() {
   const config = {
     crm,
     channels,
-    sender: { name, email, linkedin_url, company, scheduling_link, offering },
+    sender: { name, email, linkedin_url, company, scheduling_link, offering, timezone },
     rate_limits: {
       email_draft: { daily: email_daily },
       linkedin_connect: { daily: li_connect_daily, weekly: li_connect_weekly },

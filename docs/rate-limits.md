@@ -7,11 +7,12 @@ one. Especially on LinkedIn. These defaults exist because people got flagged.
 
 Set in `agent.config.json` → `rate_limits` (or edited in `src/rate-limiter.ts`).
 
-| Action | Daily | Weekly | Notes |
-|---|---|---|---|
-| `email_draft` | 200 | — | Sanity cap. Drafts still need human review. |
-| `linkedin_connect` | 20 | 80 | LinkedIn flags at ~100/week |
-| `linkedin_message` | 40 | — | Account-level suspicion threshold |
+| Action | Daily | Weekly | Monthly | Notes |
+|---|---|---|---|---|
+| `email_draft` | 200 | — | — | Sanity cap. Drafts still need human review. |
+| `linkedin_connect` | 20 | 80 | — | LinkedIn flags at ~100/week |
+| `linkedin_message` | 40 | — | — | Account-level suspicion threshold |
+| `linkedin_connect_note` | — | — | 5 | LinkedIn free-tier personalized-note quota. Auto-saturates on silent note drops; skills continue with bare invites + queue the drafted note for post-accept DM. |
 
 LinkedIn's community-reported thresholds:
 - **> 100 invites/week:** warning banner in the UI
@@ -24,9 +25,16 @@ a calibration run on a low-value account first.
 ## Additional safety rails (enforced by skills, not the rate-limiter)
 
 - **30–120 s jittered sleep** between consecutive actions.
-- **Hard-stop on 3 consecutive errors** from `connect_with_person`.
-- **Session-expired detection:** if the MCP returns an auth error, the skill
-  stops and asks the user to `--login` again. No silent retries.
+- **Hard-stop on 3 consecutive `send_failed` errors** from `connect`. The
+  `silent_reject`, `follow_only`, `connect_unavailable`, and ambiguous
+  match-validator verdicts do NOT count — see the status taxonomy in
+  `knowledge/learnings.md` §A.4d.
+- **One-shot auto-retry** on transient `send_failed` reasons (missing
+  dialog, click-ineffective). 3 s backoff. Controlled by
+  `TRANSIENT_FAILURE_PATTERNS` in `src/linkedin/scrape/connect.ts`.
+- **Session-expired detection:** if the CLI returns exit 2 (`auth_required`),
+  the daemon already auto-popped a login window; the skill stops and
+  surfaces. No silent retries.
 - **Run skills sequentially, not in parallel.** Parallel runs stack load on
   the same session and trip anti-automation detection.
 
@@ -54,12 +62,29 @@ Inspect current state:
 npx tsx src/rate-limiter.ts status
 ```
 
-Counters automatically reset at day-key / week-key rollover — no manual work.
+Counters automatically reset at day-key / week-key / month-key rollover —
+no manual work.
 
-Optional hygiene: prune day counters older than 60 days (weekly rows stay):
+Optional hygiene: prune day counters older than 60 days (weekly + monthly
+rows stay):
 
 ```bash
 npx tsx src/rate-limiter.ts prune
+```
+
+### Recovery commands
+
+Two corrections are available when the counter state diverges from reality:
+
+```bash
+# Force a counter to its cap. Used automatically when a LinkedIn note is
+# silently dropped (free-tier quota exhausted) — the remaining batch then
+# auto-falls-back to bare invites for the rest of the month.
+npx tsx src/rate-limiter.ts saturate linkedin_connect_note
+
+# Clear the current window's counter. Scope defaults to `all`
+# (day + week + month). Useful after aborted runs or integration tests.
+npx tsx src/rate-limiter.ts reset linkedin_connect_note month
 ```
 
 ## What to do if LinkedIn flags you

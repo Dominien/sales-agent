@@ -34,6 +34,9 @@ the full situation. User specifies ONE identifier.
    - Reference the most recent concrete thread point.
    - Integrate `extra_context` naturally.
    - Single specific CTA.
+   - If proposing meeting times, use `<sender.timezone>` from config as the tz label. If `sender.timezone` is empty, drop the specific slots and point to `<sender.scheduling_link>` instead.
+   - **German formal greetings:** use `src/honorifics.ts` (`formalGreeting({firstname, lastname, gender}, 'de')`) to avoid double-rendering when the tracker's `firstname` contains a stored honorific (Dr., Prof. Dr., Dipl.-Ing., ...).
+   - **Bridge re-engagement** (prior commercial conversation → silence): prefer commercial *Verbleib* fragments over aesthetic details. See learnings.md §C.1.
 
 5. **Rate-limit check** for the chosen channel.
 

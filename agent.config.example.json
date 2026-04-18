@@ -8,12 +8,14 @@
     "linkedin_url": "https://www.linkedin.com/in/your-slug",
     "company": "Your Company",
     "scheduling_link": "https://cal.com/your-slug/30min",
-    "offering": "1-2 sentence description of what you sell and who it's for."
+    "offering": "1-2 sentence description of what you sell and who it's for.",
+    "timezone": "Europe/Berlin"
   },
   "rate_limits": {
-    "email_draft":      { "daily": 200 },
-    "linkedin_connect": { "daily": 20, "weekly": 80 },
-    "linkedin_message": { "daily": 40 }
+    "email_draft":           { "daily": 200 },
+    "linkedin_connect":      { "daily": 20, "weekly": 80 },
+    "linkedin_message":      { "daily": 40 },
+    "linkedin_connect_note": { "monthly": 5 }
   },
   "defaults": {
     "language": "auto",

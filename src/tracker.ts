@@ -9,6 +9,8 @@
  *   tracker.ts upsert --json '<partial row JSON>'    → idempotent create/update by identifier
  *   tracker.ts score <contact_id> <fit> <eng> <tier>
  *   tracker.ts status <contact_id> <status>
+ *   tracker.ts skip <contact_id> <reason>         → mark do_not_contact
+ *                                                    reasons: bounce | unsubscribe | negative_hard | manual | "" (clear)
  *   tracker.ts reply <contact_id> <channel> <classification> [snippet]
  *   tracker.ts export [--format json|tsv] [--out path]
  *
@@ -26,12 +28,15 @@ import {
   upsertContact,
   updateScores,
   updateStatus,
+  updateDoNotContact,
   updateReply,
   TRACKER_COLUMNS,
   type TrackerRow,
   normalizeEmail,
   normalizeLinkedInUrl,
 } from './db.ts';
+
+const VALID_SKIP_REASONS = ['bounce', 'unsubscribe', 'negative_hard', 'manual', ''];
 
 function parseFlags(args: string[]): Record<string, string> {
   const flags: Record<string, string> = {};
@@ -144,6 +149,27 @@ switch (command) {
     console.log(`Status set: ${contactId} → ${status}`);
     break;
   }
+  case 'skip': {
+    const [contactId, reason] = args;
+    if (!contactId || reason === undefined) {
+      console.error(
+        `Usage: tracker.ts skip <contact_id> <${VALID_SKIP_REASONS.filter(Boolean).join('|')}|"">`,
+      );
+      process.exit(1);
+    }
+    if (!VALID_SKIP_REASONS.includes(reason)) {
+      console.error(
+        `reason must be one of: ${VALID_SKIP_REASONS.filter(Boolean).join(', ')} (or "" to clear)`,
+      );
+      process.exit(1);
+    }
+    if (!updateDoNotContact(contactId, reason)) {
+      console.error(`No row for contact_id ${contactId}`);
+      process.exit(1);
+    }
+    console.log(`do_not_contact set: ${contactId} → ${reason || '(cleared)'}`);
+    break;
+  }
   case 'reply': {
     const [contactId, channel, classification, ...snippetParts] = args;
     if (!contactId || !channel || !classification) {
@@ -183,7 +209,7 @@ switch (command) {
   }
   default:
     console.error(
-      'Usage: tsx src/tracker.ts read | rows | find <identifier> | upsert --json <json> | score <id> <fit> <eng> <tier> | status <id> <status> | reply <id> <email|linkedin> <classification> [snippet] | export [--format json|tsv] [--out path]',
+      'Usage: tsx src/tracker.ts read | rows | find <identifier> | upsert --json <json> | score <id> <fit> <eng> <tier> | status <id> <status> | skip <id> <bounce|unsubscribe|negative_hard|manual|""> | reply <id> <email|linkedin> <classification> [snippet] | export [--format json|tsv] [--out path]',
     );
     process.exit(1);
 }

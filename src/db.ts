@@ -57,6 +57,7 @@ export const TRACKER_COLUMNS = [
   'engagement_score',
   'priority_tier',
   'status',
+  'do_not_contact',
 ] as const;
 
 export type TrackerColumn = (typeof TRACKER_COLUMNS)[number];
@@ -100,7 +101,8 @@ db.exec(`
     fit_score                       TEXT NOT NULL DEFAULT '',
     engagement_score                TEXT NOT NULL DEFAULT '',
     priority_tier                   TEXT NOT NULL DEFAULT '',
-    status                          TEXT NOT NULL DEFAULT ''
+    status                          TEXT NOT NULL DEFAULT '',
+    do_not_contact                  TEXT NOT NULL DEFAULT ''
   );
   CREATE UNIQUE INDEX IF NOT EXISTS idx_tracker_email_uniq        ON tracker(email)        WHERE email != '';
   CREATE UNIQUE INDEX IF NOT EXISTS idx_tracker_linkedin_url_uniq ON tracker(linkedin_url) WHERE linkedin_url != '';
@@ -157,6 +159,19 @@ db.exec(`
     PRIMARY KEY (action_type, window_key)
   );
 `);
+
+// Idempotent migrations for databases created before newer columns existed.
+// Runs after the initial CREATE TABLE block so fresh installs already have the
+// column (ALTER is a no-op), and existing installs get ALTERed in place.
+{
+  const existing = new Set(
+    (db.prepare(`PRAGMA table_info(tracker)`).all() as Array<{ name: string }>).map((r) => r.name),
+  );
+  if (!existing.has('do_not_contact')) {
+    db.exec(`ALTER TABLE tracker ADD COLUMN do_not_contact TEXT NOT NULL DEFAULT ''`);
+  }
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_tracker_do_not_contact ON tracker(do_not_contact)`);
+}
 
 // ─── Identifier normalization ────────────────────────────────────────────
 
@@ -356,6 +371,9 @@ const stmtUpdateScores = db.prepare(`
   UPDATE tracker SET fit_score = ?, engagement_score = ?, priority_tier = ? WHERE contact_id = ?
 `);
 const stmtUpdateStatus = db.prepare(`UPDATE tracker SET status = ? WHERE contact_id = ?`);
+const stmtUpdateDoNotContact = db.prepare(
+  `UPDATE tracker SET do_not_contact = ? WHERE contact_id = ?`,
+);
 const stmtUpdateLeadStatus = db.prepare(`UPDATE tracker SET lead_status = ? WHERE contact_id = ?`);
 const stmtUpdateNotesSummary = db.prepare(`UPDATE tracker SET notes_summary = ? WHERE contact_id = ?`);
 
@@ -389,6 +407,9 @@ export const updateScores = (
 
 export const updateStatus = (contactId: string, status: string) =>
   stmtUpdateStatus.run(status, contactId).changes > 0;
+
+export const updateDoNotContact = (contactId: string, reason: string) =>
+  stmtUpdateDoNotContact.run(reason, contactId).changes > 0;
 
 export const updateLeadStatus = (contactId: string, status: string) =>
   stmtUpdateLeadStatus.run(status, contactId).changes > 0;
@@ -591,6 +612,30 @@ export function getRateCount(actionType: string, windowKey: string): { count: nu
 export function recordRateAction(actionType: string, windowKey: string): void {
   const { count } = getRateCount(actionType, windowKey);
   stmtUpsertRateRow.run(actionType, windowKey, count + 1, new Date().toISOString());
+}
+
+/**
+ * Force a window counter up to `cap`. Used to auto-exhaust a budget when a
+ * silent failure mode signals we should stop retrying (e.g. LinkedIn dropped
+ * a personalized note → saturate the month's note-quota so subsequent
+ * connects don't attempt to pass a note either). Only raises; never lowers.
+ */
+export function saturateRateAction(actionType: string, windowKey: string, cap: number): void {
+  const { count } = getRateCount(actionType, windowKey);
+  if (count >= cap) return;
+  stmtUpsertRateRow.run(actionType, windowKey, cap, new Date().toISOString());
+}
+
+const stmtDeleteRateRow = db.prepare(
+  'DELETE FROM rate_state WHERE action_type = ? AND window_key = ?',
+);
+
+/**
+ * Drop the counter for a specific (action, window). Used by `rate-limiter.ts
+ * reset` to recover from misrecords (tests, aborted runs, manual corrections).
+ */
+export function resetRateAction(actionType: string, windowKey: string): number {
+  return stmtDeleteRateRow.run(actionType, windowKey).changes;
 }
 
 export function allRateRows(): Array<{
