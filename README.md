@@ -1,11 +1,35 @@
 # sales-agent
 
-> **One sales agent. Your CRM (or none). Your channels. Runs on any MCP-capable harness.**
+<p align="center">
+  <img src="assets/banner.png" alt="Outbound, on autopilot. LinkedIn. Gmail. Any CRM. Or none." width="880" />
+</p>
 
-An autonomous, skill-based sales agent with a pluggable CRM adapter layer and a
-composable channel layer. Prospect, cold-touch, follow-up, classify replies,
-analyze your pipeline, and close the feedback loop — all from your harness of
-choice (Claude Code, Cursor, Continue, Windsurf, custom).
+<p align="center">
+  <em>Built for a friend who runs outbound for a living. The agent read his HubSpot, scored 300 contacts,<br/>
+  sent 120 personalized LinkedIn invites, and surfaced 3 signed deals hiding in his own pipeline.<br/>
+  Now it's open source. Runs on your laptop. Your data stays yours.</em>
+</p>
+
+<p align="center">
+  <a href="#60-second-quickstart-sqlite--email-only"><img src="https://img.shields.io/badge/Quickstart-5_min-22c55e?style=flat-square" alt="Quickstart" /></a>
+  <img src="https://img.shields.io/badge/Claude_Code-supported-8B5CF6?style=flat-square" alt="Claude Code" />
+  <img src="https://img.shields.io/badge/Cursor-supported-6366F1?style=flat-square" alt="Cursor" />
+  <img src="https://img.shields.io/badge/MCP-compatible-14B8A6?style=flat-square" alt="MCP" />
+  <img src="https://img.shields.io/badge/Node-18%2B-339933?style=flat-square&logo=node.js&logoColor=white" alt="Node" />
+  <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Playwright-scraper-45BA4B?style=flat-square&logo=playwright&logoColor=white" alt="Playwright" />
+  <img src="https://img.shields.io/badge/SQLite-embedded-003B57?style=flat-square&logo=sqlite&logoColor=white" alt="SQLite" />
+  <img src="https://img.shields.io/badge/License-MIT-ef4444?style=flat-square" alt="MIT" />
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/LinkedIn-autonomous-0A66C2?style=flat-square&logo=linkedin&logoColor=white" alt="LinkedIn" />
+  <img src="https://img.shields.io/badge/Gmail-draft_only-EA4335?style=flat-square&logo=gmail&logoColor=white" alt="Gmail" />
+  <img src="https://img.shields.io/badge/HubSpot-adapter-FF7A59?style=flat-square&logo=hubspot&logoColor=white" alt="HubSpot" />
+  <img src="https://img.shields.io/badge/Close-adapter-2563eb?style=flat-square" alt="Close" />
+  <img src="https://img.shields.io/badge/Attio-adapter-1d1d1f?style=flat-square" alt="Attio" />
+  <img src="https://img.shields.io/badge/Salesforce-adapter-00A1E0?style=flat-square&logo=salesforce&logoColor=white" alt="Salesforce" />
+</p>
 
 ---
 
